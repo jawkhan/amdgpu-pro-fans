@@ -81,7 +81,7 @@ set_adapter_fan_speeds ()
     cardcount="0";
     for CurrentCard in  /sys/class/drm/card?/ -o /sys/class/drm/card??/ ; do
          for CurrentMonitor in "$CurrentCard"device/hwmon/hwmon?/ -o "$CurrentCard"device/hwmon/hwmon??/ ; do
-            if [$cardcount == $adapter]; then 
+            if ["$cardcount" -eq "$adapter"]; then 
                   cd $CurrentMonitor # &>/dev/null
                   workingdir="`pwd`"
                   fanmax=$(head -1 "$workingdir"/pwm1_max)
