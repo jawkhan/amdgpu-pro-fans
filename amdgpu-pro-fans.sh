@@ -28,7 +28,7 @@
 ############################
 # COMMAND PARSED VARIABLES #
 ############################
-adapter="all"
+adaptor="all"
 targettemp=""
 fanpercent=""
 arguments="$@"
@@ -39,7 +39,7 @@ usage ()
 {
     echo "* AMDGPU-PRO-FANS *"
     echo "error: invalid arguments"
-    echo "usage: $0 [-h] for help..."
+    echo "$0 usage:" && grep " .)\ #" $0; exit 0;
     exit
 }
 
@@ -76,12 +76,12 @@ set_all_fan_speeds ()
     done
 }
 
-set_adapter_fan_speeds ()
+set_adaptor_fan_speeds ()
 {
     cardcount="0";
     for CurrentCard in  /sys/class/drm/card?/ -o /sys/class/drm/card??/ ; do
          for CurrentMonitor in "$CurrentCard"device/hwmon/hwmon?/ -o "$CurrentCard"device/hwmon/hwmon??/ ; do
-            if ["$cardcount" -eq "$adapter"]; then 
+            if [ "$((cardcount))" -eq "$adaptor" ]; then 
                   cd $CurrentMonitor # &>/dev/null
                   workingdir="`pwd`"
                   fanmax=$(head -1 "$workingdir"/pwm1_max)
@@ -109,10 +109,12 @@ set_adapter_fan_speeds ()
 
 set_fans_requested ()
 {
-    if [ "$adapter"="all" ] ; then
-        set_all_fan_speeds
+    if [ "$adaptor" != "all" ] ; then
+        echo "Setting Adaptor$adaptor speed"
+	set_adaptor_fan_speeds
     else
-        set_adapter_fan_speeds
+        #set_adapter_fan_speeds
+	set_all_fan_speeds
     fi
 }
 
@@ -120,23 +122,20 @@ set_fans_requested ()
 #################################
 # PARSE COMMAND LINE PARAMETERS #
 #################################
-command_line_parser ()
-{
-     parseline=`getopt -s bash -u -o a:s: -n '$0' -- "$arguments"` 
-     eval set -- "$parseline"
-     while true ; do
-        case "$1" in
-            -a ) adapter="$2" ; shift 2 ;;
-            -s ) fanpercent="$2" ; set_fans_requested ; break ;;
-            --)  break ;;
-            *) usage ; exit 1 ;;
-        esac    
-    done
-}
 
 #################
 # Home Function #
 #################
+[ $# -eq 0 ] && usage
+while getopts ":hs:a:" arg; do
+	case $arg in
+            a) # Specify 'a' value for Adaptor
+		 adaptor="${OPTARG}"; echo $adaptor ;;
+            s) # Specify 's' value for Speed
+		fanpercent=${OPTARG}; set_fans_requested ;;
+            h | *) # Show Help
+		usage; exit 0 ;;
+        esac
+done
 
-command_line_parser
 exit;
